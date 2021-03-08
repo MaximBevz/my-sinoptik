@@ -4,14 +4,14 @@
       <h1 class="main-info__temperature">{{weather.temperature}}<span>&deg;</span></h1>
       <p class="main-info__city">{{weather.cityName}}</p>
     </div>
-    <input type="text" :placeholder="place" class="main-search" v-model="citySearch">
+    <input type="text" :placeholder="place" class="main-search" v-model="citySearch" @keydown.enter="getWeather">
     <div class="main-descr">
       <h2 class="main-descr__title">{{weather.description}}</h2>
       <div class="main-descr__info">
-        <div class="main-descr__temp">Min.temp: <span>{{weather.lowTemp}}&deg;</span></div>
-        <div class="main-descr__temp">Max. temp: <span>{{weather.highTemp}}&deg;</span></div>
-        <div class="main-descr__temp">Feels like: <span>{{weather.feelsLike}}&deg;</span></div>
-        <div class="main-descr__temp">Humiditly: <span>{{weather.humiditly}}%</span></div>
+        <div class="main-descr__temp">Мин. темп: <span>{{weather.lowTemp}}&deg;</span></div>
+        <div class="main-descr__temp">Макс. темп: <span>{{weather.highTemp}}&deg;</span></div>
+        <div class="main-descr__temp">Чувствуется: <span>{{weather.feelsLike}}&deg;</span></div>
+        <div class="main-descr__temp">Влажность: <span>{{weather.humidity}}%</span></div>
       </div>
     </div>
   </div>
@@ -23,17 +23,34 @@ export default {
   name: 'mySinoptik',
   data() {
     return {
-      place: 'Search city . . .',
+      place: 'Найти город . . .',
       citySearch: '',
       weather: {
-        cityName: 'Ovruch',
+        cityName: 'Овруч',
         temperature: '22',
         description: 'Clouds',
         lowTemp: '18',
         highTemp: '22',
         feelsLike: '20',
-        humiditly: '45'
+        humidity: '45'
       }
+    }
+  },
+  methods: {
+    getWeather: async function() {
+      const key = 'fe57b721fd47b8600afac45a7829c1ea';
+      const baseUrl = `http://api.openweathermap.org/data/2.5/weather?q=${this.citySearch}&lang=ru&units=metric&appid=${key}`;
+
+      const response = await fetch(baseUrl);
+      const data = await response.json();
+      console.log(data)
+      this.weather.cityName = data.name;
+      this.weather.temperature = Math.round(data.main.temp);
+      this.weather.description = data.weather[0].description;
+      this.weather.lowTemp = Math.round(data.main.temp_min);
+      this.weather.highTemp = Math.round(data.main.temp_max);
+      this.weather.feelsLike = Math.round(data.main.feels_like);
+      this.weather.humidity = Math.round(data.main.humidity);
     }
   }
 }
