@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import mySinoptik from './mySinoptik.vue';
 
-createApp(App).mount('#app')
+createApp(mySinoptik).mount('#app');
