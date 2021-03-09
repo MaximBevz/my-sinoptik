@@ -9,6 +9,7 @@
     </div>
     <label class="main-search">
       <input type="text" :placeholder="place" class="main-search__input" v-model="citySearch" @keydown.enter="getWeather">
+      <p class="main-search__error" v-if="cityFound">Ничего не найдено</p>
       <button class="main-search__btn" @click="getWeather">Найти</button>
     </label>
     <div class="main-descr">
@@ -27,17 +28,18 @@
 
 export default {
   name: 'mySinoptik',
-  isDay: false,
   data() {
     return {
+      isDay: false,
+      cityFound: false,
+      place: 'Найти город . . .',
+      citySearch: '',
       weatherName: {
         clear: false,
         cloudly: false,
         rain: false,
         snow: false,
       },
-      place: 'Найти город . . .',
-      citySearch: '',
       weather: {
         cityName: 'Овруч',
         temperature: '22',
@@ -54,8 +56,9 @@ export default {
       const key = 'fe57b721fd47b8600afac45a7829c1ea';
       const baseUrl = `http://api.openweathermap.org/data/2.5/weather?q=${this.citySearch}&lang=ru&units=metric&appid=${key}`;
 
-      const response = await fetch(baseUrl);
-      const data = await response.json();
+      try {
+        const response = await fetch(baseUrl);
+        const data = await response.json();
 
       this.weather.cityName = data.name;
       this.weather.temperature = Math.round(data.main.temp);
@@ -65,6 +68,7 @@ export default {
       this.weather.feelsLike = Math.round(data.main.feels_like);
       this.weather.humidity = Math.round(data.main.humidity);
       this.citySearch = ''
+      this.cityFound = false
 
       const timeOfDay = data.weather[0].icon;
 
@@ -88,6 +92,9 @@ export default {
       } else {
         this.remooveAllWeather()
         this.weatherName.clear = true
+      }
+      } catch (error) {
+        this.cityFound = true
       }
       
     },
@@ -229,6 +236,9 @@ export default {
     box-shadow: 0px 0px 10px rgb(0 0 0 / 30%);
     color: rgba(0, 0, 0, 0.4);
     font-weight: 900;
+  }
+  .main-search__error {
+    margin-top: 10px;
   }
   .main-descr {
     width: 95%;
