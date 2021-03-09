@@ -1,10 +1,16 @@
 <template>
-  <div class="main">
+  <div id="main" :class="[isDay ? 'day' : 'night', weatherName]">
     <div class="main-info">
-      <h1 class="main-info__temperature">{{weather.temperature}}<span>&deg;</span></h1>
+      <div class="main-info__temperature">
+        <h1 class="main-info__title">{{weather.temperature}}<span>&deg;</span></h1>
+        <img src="./assets/img/thermometer.svg" alt="termometer">
+      </div>
       <p class="main-info__city">{{weather.cityName}}</p>
     </div>
-    <input type="text" :placeholder="place" class="main-search" v-model="citySearch" @keydown.enter="getWeather">
+    <label class="main-search">
+      <input type="text" :placeholder="place" class="main-search__input" v-model="citySearch" @keydown.enter="getWeather">
+      <button class="main-search__btn" @click="getWeather">Найти</button>
+    </label>
     <div class="main-descr">
       <h2 class="main-descr__title">{{weather.description}}</h2>
       <div class="main-descr__info">
@@ -21,14 +27,21 @@
 
 export default {
   name: 'mySinoptik',
+  isDay: false,
   data() {
     return {
+      weatherName: {
+        clear: false,
+        cloudly: false,
+        rain: false,
+        snow: false,
+      },
       place: 'Найти город . . .',
       citySearch: '',
       weather: {
         cityName: 'Овруч',
         temperature: '22',
-        description: 'Clouds',
+        description: 'Облачно',
         lowTemp: '18',
         highTemp: '22',
         feelsLike: '20',
@@ -43,7 +56,7 @@ export default {
 
       const response = await fetch(baseUrl);
       const data = await response.json();
-      console.log(data)
+
       this.weather.cityName = data.name;
       this.weather.temperature = Math.round(data.main.temp);
       this.weather.description = data.weather[0].description;
@@ -51,6 +64,37 @@ export default {
       this.weather.highTemp = Math.round(data.main.temp_max);
       this.weather.feelsLike = Math.round(data.main.feels_like);
       this.weather.humidity = Math.round(data.main.humidity);
+      this.citySearch = ''
+
+      const timeOfDay = data.weather[0].icon;
+
+      if(timeOfDay.includes('n')) {
+        this.isDay = false
+      } else {
+        this.isDay = true
+      }
+
+      const nameWeather = data.weather[0].description;
+
+      if(nameWeather.includes("пасмурно")) {
+        this.remooveAllWeather()
+        this.weatherName.cloudly = true
+      } else if(nameWeather.includes("снег")) {
+        this.remooveAllWeather()
+        this.weatherName.snow = true
+      } else if(nameWeather.includes("дождь")) {
+        this.remooveAllWeather()
+        this.weatherName.rain = true
+      } else {
+        this.remooveAllWeather()
+        this.weatherName.clear = true
+      }
+      
+    },
+    remooveAllWeather() {
+      for(let key in this.weatherName) {
+        this.weatherName[key] = false
+      }
     }
   }
 }
@@ -64,14 +108,44 @@ export default {
     padding: 0;
     font-family: 'Fira';
   }
-  .main {
-    background: url('./assets/img/clouds.jpg')center center/cover no-repeat;
+  #main {
     position: relative;
     width: 100%;
     height: 100vh;
     overflow: hidden;
   }
-  .main::before {
+  .day {
+    background: url('./assets/img/clouds.jpg')center center/cover no-repeat;
+  }
+  .night {
+    background: url('./assets/img/clouds-night.jpg')center center/cover no-repeat;
+  }
+  #main.night.clear::before {
+    background: url(./assets/img/partly-cloudy-night.svg)center center/cover no-repeat;
+  }
+  #main.night.cloudly::before {
+    background: url(./assets/img/cloudy.svg)center center/cover no-repeat;
+  }
+  #main.night.rain::before {
+    background: url(./assets/img/rain.svg)center center/cover no-repeat;
+  }
+  #main.night.snow::before {
+    background: url(./assets/img/snow.svg)center center/cover no-repeat;
+  }
+  #main.day.clear::before {
+    background: url(./assets/img/clear-day.svg)center center/cover no-repeat;
+  }
+  #main.day.cloudly::before {
+    background: url(./assets/img/cloudy.svg)center center/cover no-repeat;
+  }
+  #main.day.rain::before {
+    background: url(./assets/img/rain.svg)center center/cover no-repeat;
+  }
+  #main.day.snow::before {
+    background: url(./assets/img/snow.svg)center center/cover no-repeat;
+  }
+
+  #main::before {
     content: '';
     position: abosolute;
     display: block;
@@ -79,20 +153,27 @@ export default {
     height: 120px;
     top: 0px;
     left: 0px;
-    background: url(./assets/img/clear-day.svg)center center/cover no-repeat;
   }
   .main-info {
     text-align: center;
   }
   .main-info__temperature {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .main-info__title {
     font-size: 64px;
     color: rgba(250, 241, 241, 0.918);
     text-shadow: 2px 0px 5px rgb(0 0 0 / 50%);
-    position: relative;
   }
-  .main-info__temperature span{
-    font-size: 40px;
+  .main-info__title span {
+    font-size: 30px;
     position: absolute;
+  }
+  .main-info__temperature img{
+    width: 80px;
   }
   .main-info__city {
     color: rgba(250, 241, 241, 0.918);
@@ -103,23 +184,47 @@ export default {
     font-weight: 900;
   }
   .main-search {
-    width: 80%;
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+  }
+  .main-search__input {
+    width: 50%;
     min-width: 280px;
-    padding: 10px;
+    padding: 20px 15px;
     border-radius: 10px;
     border: none;
     display: block;
     background-color: rgb(232 243 247 / 60%);
-    color: rgba(250, 241, 241, 0.9);
+    color: rgba(0, 0, 0, 0.4);
+    font-weight: 900;
     box-shadow: 0px 0px 10px rgb(0 0 0 / 10%);
     transition: 0.3s all;
-    margin: 40px auto;
+    cursor: pointer;
   }
-  .main-search::placeholder {
+  .main-search__btn {
+    border: none;
+    background-color:crimson;
+    color: #fff;
+    min-width: 100px;
+    padding: 20px;
+    border-radius: 10px;
+    margin-left: 20px;
+    font-weight: 900;
+    transition: 0.3s all;
+    cursor: pointer;
+  }
+  .main-search__btn:hover {
+    background-color:rgb(172, 20, 50);
+  }
+  .main-search__btn:focus {
+    outline: none;
+  }
+  .main-search__input::placeholder {
     color: rgba(0, 0, 0, 0.4);
     font-weight: 900;
   }
-  .main-search:focus {
+  .main-search__input:focus {
     outline: none;
     box-shadow: 0px 0px 10px rgb(0 0 0 / 30%);
     color: rgba(0, 0, 0, 0.4);

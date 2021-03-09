@@ -10,3 +10,5 @@
   font-style: normal;
   font-weight: 900;
 }
+
+@import './media.css'
